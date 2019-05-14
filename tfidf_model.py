@@ -7,31 +7,25 @@ def computeTF(tokens):
     tf = {}
     terms = set(tokens)
     for term in terms:
-        tf[term] = tokens.count(term)
+        tf[term] = 1 + math.log10(tokens.count(term))
     return tf
 
-def computeDF(tokens, TERM_NO_DOCS):
+def computeIDF(documents):
     """
     Gets tokens of a document as a parameter
     Increments the counter of terms which will finally become the document frequency of the terms.
     """
-    terms = set(tokens)
-    for term in terms:
-        if term in TERM_NO_DOCS:
-            TERM_NO_DOCS[term] += 1
-        else:
-            TERM_NO_DOCS[term] = 1
-    return TERM_NO_DOCS
-
-def computeIDF(tokens, NO_DOCS, TERM_NO_DOCS):
-    """
-    Gets tokens of a document as a parameter
-    Evaluates and returns the idf vector of this document
-    """
     idf = {}
-    terms = set(tokens)
-    for term in terms:
-        idf[term] = math.log(float(1 + NO_DOCS / (1 + TERM_NO_DOCS[term])))
+    for document in documents:
+        terms_in_this_doc = set(list(document['tokens']))
+        for term in terms_in_this_doc:
+            if term not in idf:
+                idf[term] = 0
+            idf[term] += 1
+    
+    for term in idf:
+        idf[term] = math.log10(len(documents)/idf[term])
+    
     return idf
 
 def normalize_vector(tf_idf):
@@ -65,13 +59,16 @@ def tf_idf_model(docs_by_tokens):
     Evaluate the tf-idf scores of each documents, then create tf-idf matrix(which is also stored as map)
     Then return this tf_idf matrix
     """
-    NO_DOCS = len(docs_by_tokens)
-    TERM_NO_DOCS = {}
+    idf = computeIDF(docs_by_tokens)
     tf_idf_table = {}
     for document in docs_by_tokens:
-        TERM_NO_DOCS = computeDF(document['tokens'], TERM_NO_DOCS)
         tf = computeTF(document['tokens'])
-        idf = computeIDF(document['tokens'], NO_DOCS, TERM_NO_DOCS)
         tf_idf_table[document['id']] = computeTF_IDF(tf, idf)
-    return tf_idf_table
+    return tf_idf_table, idf
+
+def cos_similarity( paragraph1, paragraph2 ):
+    cos_value = 0
+    for term in paragraph1:
+        cos_value += paragraph1[term] * paragraph2.get(term, 0)
+    return cos_value 
     
