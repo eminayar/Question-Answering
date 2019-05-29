@@ -47,7 +47,7 @@ def computeTF_IDF(tf, idf):
     """
     tf_idf={}
     for term in tf:
-        tf_idf[term] = tf[term] * idf[term]
+        tf_idf[term] = tf[term] * idf.get(term, 3.5)
     
     tf_idf = normalize_vector(tf_idf)
     
